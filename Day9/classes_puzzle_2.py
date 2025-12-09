@@ -70,11 +70,90 @@ class Line:
 
 
 class Shape:
+	COLOR_UNKNOWN = 0
+	COLOR_REDGREEN = 1
+	COLOR_BLACK = 2
+
 	def __init__(self):
 		self.lines = []
+		self.array_2d = []
 
 	def add_line(self, line):
 		self.lines.append(line)
+
+	# returns tuple (min, max)
+	def get_x_min_max(self):
+		min_x = None
+		max_x = None
+		for line in self.lines:
+			if min_x == None:
+				min_x = min(line.coord_a.x, line.coord_b.x)
+			else:
+				min_x = min(min_x, line.coord_a.x, line.coord_b.x)
+			if max_x == None:
+				max_x = max(line.coord_a.x, line.coord_b.x)
+			else:
+				max_x = max(max_x, line.coord_a.x, line.coord_b.x)
+		return (min_x, max_x)
+
+	# returns tuple (min, max)
+	def get_y_min_max(self):
+		min_y = None
+		max_y = None
+		for line in self.lines:
+			if min_y == None:
+				min_y = min(line.coord_a.y, line.coord_b.y)
+			else:
+				min_y = min(min_y, line.coord_a.y, line.coord_b.y)
+			if max_y == None:
+				max_y = max(line.coord_a.y, line.coord_b.y)
+			else:
+				max_y = max(max_y, line.coord_a.y, line.coord_b.y)
+		return (min_y, max_y)
+
+	# only call this after adding all lines
+	def build_array_2d(self):
+		self.array_2d = []
+		# build blank slate
+		(min_x, max_x) = self.get_x_min_max()
+		(min_y, max_y) = self.get_y_min_max()
+		for r in range(max_y + 3):
+			row = []
+			for c in range(max_x + 3):
+				row.append(Shape.COLOR_UNKNOWN)
+			self.array_2d.append(row)
+		# search out what is in and out
+		# starts where I know we're outside the shape and works inward
+		# the middle of the shape ends up not marked, but that is ok
+		current_coords = [Coordinate(0,0)]
+		while len(current_coords) > 0:
+			next_coords = []
+			for coord in current_coords:
+				if coord.x < 0 or coord.y < 0:
+					continue
+				if coord.x >= len(self.array_2d[0]) or coord.y >= len(self.array_2d):
+					continue
+				if self.array_2d[coord.y][coord.x] != Shape.COLOR_UNKNOWN:
+					continue
+				if self.edge_overlaps_coord(coord):
+					self.array_2d[coord.y][coord.x] = Shape.COLOR_REDGREEN
+					continue
+				self.array_2d[coord.y][coord.x] = Shape.COLOR_BLACK
+				next_coords.append(Coordinate(coord.x-1, coord.y))
+				next_coords.append(Coordinate(coord.x+1, coord.y))
+				next_coords.append(Coordinate(coord.x, coord.y-1))
+				next_coords.append(Coordinate(coord.x, coord.y+1))
+			current_coords = next_coords;
+		# now search inward to turn the remainder to the right color
+		# this is needed to catch interior corners
+		for r in range(len(self.array_2d)):
+			for c in range(len(self.array_2d[r])):
+				if self.array_2d[r][c] == Shape.COLOR_UNKNOWN:
+					self.array_2d[r][c] = Shape.COLOR_REDGREEN
+		
+	def print_array_2d(self):
+		for row in self.array_2d:
+			print("".join([str(x) for x in row]))
 
 	def edge_overlaps_coord(self, coord):
 		for line in self.lines:
@@ -87,14 +166,22 @@ class Shape:
 		max_x = max(corner_a.x, corner_b.x)
 		min_y = min(corner_a.y, corner_b.y)
 		max_y = max(corner_a.y, corner_b.y)
+		# i just need to check the rect edges...but i do need to check all of them
 		x = min_x
 		while x <= max_x:
-			y = min_y
-			while y <= max_y:
-				if not self.is_inside_ray_cast(Coordinate(x,y)):
-					return False
-				y = y + 1
+			if not self.is_inside_2d_array(Coordinate(x,min_y)):
+				return False
+			if not self.is_inside_2d_array(Coordinate(x,max_y)):
+				return False
 			x = x + 1
+		y = min_y
+		while y <= max_y:
+			if not self.is_inside_2d_array(Coordinate(min_x,y)):
+				return False
+			if not self.is_inside_2d_array(Coordinate(max_x,y)):
+				return False
+			y = y + 1
+
 		"""
 		if not self.is_valid_rect_edge(Line(corner_a, Coordinate(corner_a.x, corner_b.y))):
 			return False
@@ -125,9 +212,12 @@ class Shape:
 			if shape_edge.overlaps_line(rect_edge):
 				return False
 		return True
+
+	def is_inside_2d_array(self, coord):
+		return self.array_2d[coord.y][coord.x] == Shape.COLOR_REDGREEN
 	
 	def is_inside_ray_cast(self, coord):
-		# if any shape edge subsumes the rect edge, then it is valid
+		# coordinates on the shape edge are ok
 		for shape_edge in self.lines:
 			if shape_edge.overlaps_coord(coord):
 				return True
@@ -137,7 +227,7 @@ class Shape:
 		for shape_edge in self.lines:
 			if shape_edge.overlaps_line(ray):
 				count_crossings = count_crossings + 1
-		return count_crossings%2 == 0 #odd number of crossings means coord started inside shape
+		return count_crossings%2 == 1 #odd number of crossings means coord started inside shape
 
 
 
