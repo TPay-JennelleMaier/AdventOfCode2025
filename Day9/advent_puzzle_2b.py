@@ -13,41 +13,23 @@
 
 
 
+# i need a new approach
+# the list of corners coordinates is short - that part is not the problem
+# the issues is that the numbers are large
+# there are 496 lines in my input
+  # N choose 2 of 496 => 122760 possible pairs
 
+# storing the "already confirmed" good inside coordinates take even longer than checking anew
 
-# so, the edges of the rect cannot cross an edge of this loop/shape
-# i'll start there
-
-
-
-# next: what if I take an outline one unit outside the valid shape
-# then if anything touches that outline, it is invalid
-# ahhh not sure how to go about that
-
-# backup and try the dumb solution of making a 2d array of the tilespace
-# no this is no good, no matter how i go about it i need to know am i inside the shape or outside it?
-
-# ok got an answer on what is inside/outside the shape
-# actual input is taking a long time to run
-# still a long time to run
-
-# ok trying 2d array now - i can do it with just edge detection
-# nooope, just building the array is taking over an hour on actual input and it still isn't done
-# trying to make that part faster
-  # building the blank array took maybe 30 seconds
-  # marking the known lines - no time at all
-  # filling in the black - starting 12:11pm...still on this part at 1:20pm...
-
-# what if I tighten the area being searched? I just need a ring around the Shape really, that'll be enough to trip the check points
-  # building the blank array took maybe 60 seconds, really
-  # marking the known lines - maybe 10 seconds
-  # filling in the black - starting 1:25pm...still not done at 2:53pm...
-
+# it is taking a while to solve even some of the pairs - visibly slow by 140th pair
+  # memory usage is not increasing visibly in Activity Monitor
+# returning to method "is_valid_rect_edge"
+  # because it is /fast/...not accurate yet but let's see if I can fix that without slowing it down
 
 
 
 import sys
-from classes_puzzle_2 import *
+from classes_puzzle_2b import *
 
 
 
@@ -72,9 +54,6 @@ i = 0
 while i < len(coords) - 1:
 	shape.add_line(Line(coords[i], coords[i+1]))
 	i = i + 1
-shape.build_array_2d()
-#shape.print_array_2d()
-print("finished building array_2d")
 
 
 coord_pairs = [] #tuple(a,b)
