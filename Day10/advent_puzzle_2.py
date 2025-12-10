@@ -19,6 +19,15 @@
 # what can go faster?
   # the order of button clicks does not matter, so AAB == ABA == BAA
   # I could either uses sets...or I could say "you can only click a button at the same or larger index than you've last clicked" (nice!)
+# yes, much faster on sample and still correct answer
+
+# ok on actual input still need faster
+  # i can check that with the remaining buttons it is still possible to click the buttons that need clicking
+  # sample still passes
+  # no, still taking too long on actual
+
+# i could organize the buttons based on joltage 0th then 1st then 2nd, etc
+  # stick to the buttons that affect 0th joltage until it is at the right value, then the buttons for 1st, etc
 
 
 import sys
@@ -93,12 +102,16 @@ class Machine:
 			new_permutations = []
 			for permutation in permutations:
 				for i in range(len(self.buttons)):
+					if i < permutation.button_clicks[-1]:
+						continue # force button click ordering
 					state = permutation.copy()
 					state.push_buttons(i, self.buttons[i])
 					if state.joltage_state == self.joltage_goal:
 						self.button_clicks = state.button_clicks
 						return
 					if self.joltage_too_high(state):
+						continue
+					if self.joltage_goal_impossible(state):
 						continue
 					new_permutations.append(state)
 			permutations = new_permutations
@@ -110,6 +123,31 @@ class Machine:
 			if joltage_state.joltage_state[i] > self.joltage_goal[i]:
 				return True
 		return False
+
+	def get_first_joltage_index_too_low(self, joltage_state):
+		for i in range(len(self.joltage_goal)):
+			if joltage_state.joltage_state[i] < self.joltage_goal[i]:
+				return i
+		print("ERROR! A")
+		
+
+	def joltage_goal_impossible(self, joltage_state):
+		# given the rule that it only works towards the right on buttons
+		# if there are no more buttons remaining that can click the joltages that are still too low
+		# then this permutation can be dropped
+		for i in range(len(self.joltage_goal)):
+			if joltage_state.joltage_state[i] < self.joltage_goal[i]:
+				if self.buttons_dont_include_i(joltage_state.button_clicks[-1], i):
+					return False
+		return False
+
+	def buttons_dont_include_i(self, leftmost_button_index, joltage_index):
+		while leftmost_button_index < len(self.buttons):
+			if joltage_index in self.buttons[leftmost_button_index].joltage_indexes:
+				return False
+			leftmost_button_index = leftmost_button_index + 1
+		return True
+		
 
 
 
@@ -127,9 +165,12 @@ for line in full_input.split('\n'):
 
 
 answer = 0
+i = 0
 for machine in machines:
+	print("working on machine " + str(i))
 	machine.calc_button_clicks()
 	answer = answer + len(machine.button_clicks)
+	i = i + 1
 print("====")
 print(answer)
 
