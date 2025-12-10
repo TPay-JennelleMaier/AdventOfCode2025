@@ -93,6 +93,15 @@ class Machine:
 				if i in button.joltage_indexes:
 					result.append(button)
 			self.buttons_by_joltage_index.append(result)
+
+		self.buttons_rightward_joltage_indexes = [] # list of lists, ith is the list of joltage indexes that appear in ith button plus all rightward buttons
+		for i in range(len(self.buttons)):
+			result = []
+			for button in self.buttons[i:]:
+				for joltage_index in button.joltage_indexes:
+					result.append(joltage_index)
+			self.buttons_rightward_joltage_indexes.append(result)
+
 	
 	def __str__(self):
 		return "joltages: "+ ",".join([str(x) for x in self.joltages]) + "\ngoal: " + ",".join([str(x) for x in self.joltage_goal]) + "\n" + "\n".join([str(b) for b in self.buttons]) + "\n"
@@ -169,11 +178,14 @@ class Machine:
 		return False
 
 	def buttons_dont_include_i(self, leftmost_button_index, joltage_index):
+		return not joltage_index in self.buttons_rightward_joltage_indexes[leftmost_button_index]
+		"""
 		while leftmost_button_index < len(self.buttons):
 			if joltage_index in self.buttons[leftmost_button_index].joltage_indexes:
 				return False
 			leftmost_button_index = leftmost_button_index + 1
 		return True
+		"""
 		
 
 
