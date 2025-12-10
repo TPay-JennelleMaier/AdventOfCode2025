@@ -32,6 +32,12 @@
 
 # should I try to make an outline again? if anything touched that, it'd be invalid for sure
 # ...aaaaaaaaaaah
+# halting that
+
+# trying out some changes to "check rect egdes against shape edges"
+# got new actual answer: 1416375744 from pair ((5741,66220), (94619,50285))
+  # it is larger than previous attempted answer, trying it out - no, game says i am still too low
+  # those changes also caused testing errors, so remove them
 
 
 import sys
