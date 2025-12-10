@@ -43,6 +43,28 @@ class Test_Line(unittest.TestCase):
 		self.assertEqual(line_a.subsumes_line(line_e), True)
 		self.assertEqual(line_a.subsumes_line(line_f), False)
 
+	def test_overlaps_line_just_on_end(self):
+		line_a = Line(Coordinate(1, 3), Coordinate(1, 7)) # vertical
+		line_b = Line(Coordinate(1, 4), Coordinate(4, 4)) # horizontal - coord a overlaps
+		line_c = Line(Coordinate(3, 5), Coordinate(1, 5)) # horizontal - coord b overlaps
+		line_d = Line(Coordinate(3, 5), Coordinate(0, 5)) # horizontal - cross in middle
+		line_e = Line(Coordinate(1, 3), Coordinate(1, 1)) # vertical - coord a overlaps
+		self.assertEqual(line_a.overlaps_line_just_on_end(line_b), True)
+		self.assertEqual(line_a.overlaps_line_just_on_end(line_c), True)
+		self.assertEqual(line_a.overlaps_line_just_on_end(line_d), False)
+		self.assertEqual(line_a.overlaps_line_just_on_end(line_e), False)
+
+		line_a = Line(Coordinate(1, 3), Coordinate(5, 3)) # horizontal
+		line_b = Line(Coordinate(2, 3), Coordinate(2, 5)) # vertical - coord a overlaps
+		line_c = Line(Coordinate(4, 7), Coordinate(4, 3)) # vertical - coord b overlaps
+		line_d = Line(Coordinate(2, 7), Coordinate(2, 0)) # vertical - cross in middle
+		line_e = Line(Coordinate(1, 3), Coordinate(0, 3)) # horizontal - coord a overlaps
+		self.assertEqual(line_a.overlaps_line_just_on_end(line_b), True)
+		self.assertEqual(line_a.overlaps_line_just_on_end(line_c), True)
+		self.assertEqual(line_a.overlaps_line_just_on_end(line_d), False)
+		self.assertEqual(line_a.overlaps_line_just_on_end(line_e), False)
+
+	
 
 	def test_overlaps_line(self):
 		line_a = Line(Coordinate(1, 3), Coordinate(1, 7)) # vertical
@@ -137,9 +159,12 @@ class Test_Shape(unittest.TestCase):
 		shape.add_line(Line(Coordinate(6,0), Coordinate(0,0)))
 
 		self.assertEqual(shape.is_valid_rect(Coordinate(0,0), Coordinate(3,3)), True)
-		self.assertEqual(shape.is_valid_rect(Coordinate(3,6), Coordinate(6,6)), True) # single line rect - skipping for now
-		self.assertEqual(shape.is_valid_rect(Coordinate(3,6), Coordinate(0,6)), True) # oh shit - rect edge extends INTO valid space
+		self.assertEqual(shape.is_valid_rect(Coordinate(3,6), Coordinate(6,6)), True)
+		self.assertEqual(shape.is_valid_rect(Coordinate(3,6), Coordinate(6,0)), True)
 		self.assertEqual(shape.is_valid_rect(Coordinate(3,3), Coordinate(6,6)), True)
+		self.assertEqual(shape.is_valid_rect(Coordinate(3,3), Coordinate(6,0)), True)
+		self.assertEqual(shape.is_valid_rect(Coordinate(0,0), Coordinate(6,6)), False)
+		self.assertEqual(shape.is_valid_rect(Coordinate(0,0), Coordinate(3,6)), False)
 
 	def test_is_inside_ray_cast(self):
 		shape = Shape()

@@ -26,6 +26,12 @@
 # returning to method "is_valid_rect_edge"
   # because it is /fast/...not accurate yet but let's see if I can fix that without slowing it down
 
+# found another old typo causing an error
+
+# got an answer but it was too low: 1292238828 from pair ((94619,48466), (4512,34126))
+
+# should I try to make an outline again? if anything touched that, it'd be invalid for sure
+# ...
 
 
 import sys
@@ -70,20 +76,11 @@ while i < len(coords) - 1:
 print("finished building pairs")
 
 
-#print("???")
-#print(shape.is_valid_rect(Coordinate(9,5), Coordinate(2,3)))
-#print("???")
-
-
 
 # select only coord-pairs that form valid rect
 valid_coord_pairs = [pair for pair in coord_pairs if shape.is_valid_rect(pair[0], pair[1])]
 #print(valid_coord_pairs)
 print("finished finding valid pairs")
-
-#print("???")
-#print(Coordinate(9,5).calc_area(Coordinate(2,3)))
-#print("???")
 
 
 # brute force check all areas at once
@@ -92,8 +89,8 @@ valid_coord_pairs.sort(key=lambda pair: pair[0].calc_area(pair[1]))
 
 #min_pair = valid_coord_pairs[0]
 max_pair = valid_coord_pairs[-1]
-#print(min_pair[0].calc_area(min_pair[1]))
-#print(max_pair[0].calc_area(max_pair[1]))
+print("max pair")
+print(max_pair)
 
 answer = max_pair[0].calc_area(max_pair[1])
 print("====")

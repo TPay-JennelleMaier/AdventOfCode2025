@@ -53,6 +53,12 @@ class Line:
 			return self.overlaps_coord(other.coord_a) and self.overlaps_coord(other.coord_b)
 		return False
 
+	"""
+	# if lines don't overlap, returns empty list
+	# if lines do overlap, returns the one or two points on "other" that are just-off-of "self"
+	def coming_off_overlap(self, other):
+	"""	
+
 	# returns a list of coords, not boolean
 	# if empty, then self does not partially-subsume other
 	# if filled (1 or 2 coords) then those are the coord just past the ends of the self
@@ -89,6 +95,18 @@ class Line:
 				if other.overlaps_coord(right_coord) and not self.overlaps_coord(right_coord):
 					results.append(right_coord)
 		return results
+
+	# returns True is lines cross, but the overlap is just on one end of "other"
+	# additional: it is also ok for just one end of "shape" to be overlapped - if there is an error then another edge will catch it...i think
+	def overlaps_line_just_on_end(self, other):
+		if self.is_vertical != other.is_vertical:
+			if self.is_vertical:
+				point = Coordinate(self.coord_a.x, other.coord_a.y)
+				return self.overlaps_coord(point) and other.overlaps_coord(point) and (other.coord_a == point or other.coord_b == point or self.coord_a == point or self.coord_b == point)
+			else:
+				point = Coordinate(other.coord_a.x, self.coord_a.y)
+				return self.overlaps_coord(point) and other.overlaps_coord(point) and (other.coord_a == point or other.coord_b == point or self.coord_a == point or self.coord_b == point)
+		return False
 			
 	def overlaps_line(self, other):
 		if self.is_vertical and other.is_vertical and self.coord_a.x == other.coord_a.x:
@@ -116,6 +134,11 @@ class Shape:
 	def add_line(self, line):
 		self.lines.append(line)
 
+	def build_outline(self):
+		# dunno which side of the line to start on
+		# so solve for both, and keep the one that is longer
+		pass
+
 	def edge_overlaps_coord(self, coord):
 		for line in self.lines:
 			if line.overlaps_coord(coord):
@@ -128,11 +151,11 @@ class Shape:
 		print("from "+str(corner_a)+" to "+str(corner_b))
 		if not self.is_valid_rect_edge(Line(corner_a, Coordinate(corner_a.x, corner_b.y))):
 			return False
-		if not self.is_valid_rect_edge(Line(corner_a, Coordinate(corner_a.y, corner_b.x))):
+		if not self.is_valid_rect_edge(Line(corner_a, Coordinate(corner_b.x, corner_a.y))):
 			return False
 		if not self.is_valid_rect_edge(Line(corner_b, Coordinate(corner_a.x, corner_b.y))):
 			return False
-		if not self.is_valid_rect_edge(Line(corner_b, Coordinate(corner_a.y, corner_b.x))):
+		if not self.is_valid_rect_edge(Line(corner_b, Coordinate(corner_b.x, corner_a.y))):
 			return False
 		
 		return True
@@ -142,25 +165,26 @@ class Shape:
 		for shape_edge in self.lines:
 			if shape_edge.subsumes_line(rect_edge):
 				return True
-		# what is the shape_edge /partially/ subsumes the rect but the extra rect bit is on the /inside/ of the shape?
-		# i could determine just the point(s) on the rect that are just off of the shape, and ray_cast check them
 		for shape_edge in self.lines:
+			# what is the shape_edge /partially/ subsumes the rect but the extra rect bit is on the /inside/ of the shape?
+			# i could determine just the point(s) on the rect that are just off of the shape, and ray_cast check them
 			partial_result = shape_edge.partially_subsumes_line(rect_edge)
 			for coord in partial_result:
 				if not self.is_inside_ray_cast(coord):
 					return False
-		# only check for partial overlaps after that
-		for shape_edge in self.lines:
+			if len(partial_result) > 0:
+				continue
+			# only check for partial overlaps after that
+			if shape_edge.overlaps_line_just_on_end(rect_edge):
+				continue
 			if shape_edge.overlaps_line(rect_edge):
+				print("fail 3")
+				print(shape_edge)
+				print(rect_edge)
 				return False
 		return True
 	
 	def is_inside_ray_cast(self, coord):
-		"""
-		if coord in self.confirmed_valid_coords:
-			return True
-		"""
-
 		# coordinates on the shape edge are ok
 		for shape_edge in self.lines:
 			if shape_edge.overlaps_coord(coord):
@@ -172,10 +196,6 @@ class Shape:
 			if shape_edge.overlaps_line(ray):
 				count_crossings = count_crossings + 1
 		is_valid = count_crossings%2 == 1 #odd number of crossings means coord started inside shape
-		"""
-		if is_valid:
-			self.confirmed_valid_coords.append(coord)
-		"""
 		return is_valid
 
 
