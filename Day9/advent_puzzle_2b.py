@@ -31,7 +31,7 @@
 # got an answer but it was too low: 1292238828 from pair ((94619,48466), (4512,34126))
 
 # should I try to make an outline again? if anything touched that, it'd be invalid for sure
-# ...
+# ...aaaaaaaaaaah
 
 
 import sys

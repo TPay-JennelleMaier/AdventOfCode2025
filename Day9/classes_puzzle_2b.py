@@ -210,18 +210,181 @@ class Shape:
 """		
 
 
+"""
 
 class Outline(Shape):
+	# flags - based on middle point
+	LINE_ABOVE = 1
+	LINE_BELOW = 2
+	LINE_LEFT = 4
+	LINE_RIGHT = 8
+	# flags - based on configuration around point
+	CORNER_V = LINE_ABOVE | LINE_BELOW
+	CORNER_H = LINE_LEFT | LINE_RIGHT
+	CORNER_A = LINE_LEFT | LINE_ABOVE
+	CORNER_B = LINE_ABOVE | LINE_RIGHT
+	CORNER_C = LINE_RIGHT | LINE_BELOW
+	CORNER_D = LINE_BELOW | LINE_LEFT
+
+	DIR_LEFT = 1
+	DIR_UP = 2
+	DIR_RIGHT = 3
+	DIR_DOWN = 4
+
+	SIDE_LEFT = 1
+	SIDE_ABOVE = 2
+	SIDE_RIGHT = 4
+	SIDE_BELOW = 8
+	SIDE_LEFT_ABOVE = SIDE_LEFT | SIDE_ABOVE
+	SIDE_RIGHT_ABORVE = SIDE_RIGHT | SIDE_ABOVE
+	SIDE_LEFT_BELOW = SIDE_LEFT | SIDE_BELOW
+	SIDE_RIGHT_BELOW = SIDE_RIGHT | SIDE_BELOW
+
 	def is_valid_rect_edge(self, rect_edge):
 		# anything that touches the edges of the outline is invalid
 		for shape_edge in self.lines:
 			if shape_edge.overlaps_line(rect_edge):
 				return False
 		return True
+
+	@staticmethod
+	def get_direction(coords, i):
+		prev_coord = None
+		if i == 0:
+			prev_coord = coords[-1]
+		else:
+			prev_coord = coords[i-1]
+		curr_coord = coords[i]
+		if prev_coord.y == curr_coord.y:
+			if prev_coord.x < curr_coord.x:
+				return Outline.DIR_RIGHT
+			else:
+				return Outline.DIR_LEFT
+		else: #then x is equal
+			if prev_coord.y < curr_coord.y:
+				prev_line = Outline.DIR_UP
+			else:
+				prev_line = Outline.DIR_DOWN
+		
+
+	@staticmethod
+	def get_corner_config(coords, i):
+		prev_coord = None
+		next_coord = None
+		curr_coord = coords[i]
+		if i == 0:
+			prev_coord = coords[-1]
+			next_coord = coords[i+1]
+		else:
+			prev_coord = coords[i-1]
+			if i = len(coords)-1:
+				next_coord = coords[0]
+			else:
+				next_coord = coords[i+1]
+		prev_line = None
+		if prev_coord.y == curr_coord.y:
+			if prev_coord.x < curr_coord.x:
+				prev_line = Outline.LINE_LEFT
+			else:
+				prev_line = Outline.LINE_RIGHT
+		else:
+			if prev_coord.y < curr_coord.y:
+				prev_line = Outline.LINE_BELOW
+			else:
+				prev_line = Outline.LINE_ABOVE
+		next_line = None
+		if next_coord.y == curr_coord.y:
+			if next_coord.x < next_coord.x:
+				next_line = Outline.LINE_LEFT
+			else:
+				next_line = Outline.LINE_RIGHT
+		else:
+			if next_coord.y < curr_coord.y:
+				next_line = Outline.LINE_BELOW
+			else:
+				next_line = Outline.LINE_ABOVE
+		return prev_line | next_line
+		
 	
 	@staticmethod
 	def build(shape, coords):
-		outline_coords = []
+		directions = [None] * len(coords) #ith corresponds to ith - direction from coord[i-1] to coord[i]
+		for in in range(len(coords)):
+			directions[i] = Outline.get_direction(coords, i)
+		outline_coords_a = [None] * len(coords) #ith corresponds to ith
+		outline_coords_b = [None] * len(coords) #ith corresponds to ith
+		outline_side_a = [None] * len(coords) #ith corresponds to ith
+		outline_side_b = [None] * len(coords) #ith corresponds to ith
+		first_corner_config = Outline.get_corner_config(coords, 0)
+		if first_corner_config == Outline.CORNER_V:
+			outline_coords_a[0] = Coordinate(coords[0].x-1, coords[0].y)
+			outline_side_a[0] = Outline.SIDE_LEFT
+			outline_coords_b[0] = Coordinate(coords[0].x+1, coords[0].y)
+			outline_side_b[0] = Outline.SIDE_RIGHT
+		elif first_corner_config == Outline.CORNER_H:
+			outline_coords_a[0] = Coordinate(coords[0].x, coords[0].y-1)
+			outline_side_a[0] = Outline.SIDE_BELOW
+			outline_coords_b[0] = Coordinate(coords[0].x, coords[0].y+1)
+			outline_side_b[0] = Outline.SIDE_ABOVE
+		elif first_corner_config == Outline.CORNER_A or first_corner_config == Outline.CORNER_C:
+			outline_coords_a[0] = Coordinate(coords[0].x-1, coords[0].y+1)
+			outline_side_a[0] = Outline.SIDE_LEFT_ABOVE
+			outline_coords_b[0] = Coordinate(coords[0].x+1, coords[0].y-1)
+			outline_side_b[0] = Outline.SIDE_RIGHT_BELOW
+		elif first_corner_config == Outline.CORNER_B or first_corner_config == Outline.CORNER_D:
+			outline_coords_a[0] = Coordinate(coords[0].x-1, coords[0].y-1)
+			outline_side_a[0] = Outline.SIDE_LEFT_BELOW
+			outline_coords_b[0] = Coordinate(coords[0].x+1, coords[0].y+1)
+			outline_side_b[0] = Outline.SIDE_RIGHT_ABOVE
+		else:
+			print("ERROR")
+
+		i = 1
+		for i in range(len(coords)):
+			corner_config = Outline.get_corner_config(coords, i)
+			prev_direction = directions[i-1]
+			if corner_config == Outline.CORNER_V:
+				outline_coords_a[i] = Coordinate(outline_coords[i-1].x, coords[i].y)
+				outline_side_a[i] = outline_side_a[i-1]
+				outline_coords_b[i] = Coordinate(outline_coords[i-1].x, coords[i].y)
+				outline_side_b[i] = outline_side_b[i-1]
+			elif corner_config == Outline.CORNER_H:
+				outline_coords_a[i] = Coordinate(coords[i].x, outline_coords[i-1].y)
+				outline_side_a[i] = outline_side_a[i-1]
+				outline_coords_b[i] = Coordinate(coords[i].x, outline_coords[i-1].y)
+				outline_side_b[i] = outline_side_b[i-1]
+			elif corner_config == Outline.CORNER_A:
+				if prev_direction == Outline.DIR_RIGHT:
+					if outline_side_a[i-1] & Outline.SIDE_ABOVE == Outline.SIDE_ABOVE:
+						# aaaaaaaaaaaaaah
+						#
+						#
+						outline_coords_a[i] = Coordinate(coords[i])
+						outline_side_a[i] = Outline.SIDE_LEFT_ABOVE
+				else: #DIR_DOWN
+				
+				# TODO
+			elif corner_config == Outline.CORNER_B:
+				# TODO
+			elif corner_config == Outline.CORNER_C:
+				# TODO
+			elif corner_config == Outline.CORNER_D:
+				# TODO
+			else:
+				print("ERROR")
+			
+		
+
+
+
+
+
+
+
+
+
+
+
 		prev_above_overlaps = False
 		prev_below_overlaps = False
 		prev_left_overlaps = False
@@ -306,6 +469,7 @@ class Outline(Shape):
 		return outline
 
 
+"""
 
 """
 class Array2d:
