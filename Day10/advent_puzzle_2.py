@@ -28,15 +28,19 @@
 
 # i could organize the buttons based on joltage 0th then 1st then 2nd, etc
   # stick to the buttons that affect 0th joltage until it is at the right value, then the buttons for 1st, etc
+  # nope not helping speed
+  # and really, there will still be lots of repeated AAB/ABA/BAA permutations here
+    # commented this change out
 
 
 import sys
 
 
 class Button:
-	def __init__(self, config_term):
+	def __init__(self, config_term, button_index):
 		config_term = config_term.replace('(','').replace(')','')
 		self.joltage_indexes = [int(x) for x in config_term.split(',')]
+		self.index = button_index
 	
 	def __str__(self):
 		return "button: "+ ",".join([str(x) for x in self.joltage_indexes])
@@ -78,8 +82,17 @@ class Machine:
 		self.buttons = []
 		for config_term in config_line.split(' '):
 			if config_term[0] == '(':
-				self.buttons.append(Button(config_term))
+				button_index = len(self.buttons)
+				self.buttons.append(Button(config_term, button_index))
 		self.button_clicks = []
+
+		self.buttons_by_joltage_index = [] # list of lists, ith is the list of buttons that can affect joltage_index "i"
+		for i in range(len(self.joltage_goal)):
+			result = []
+			for button in self.buttons:
+				if i in button.joltage_indexes:
+					result.append(button)
+			self.buttons_by_joltage_index.append(result)
 	
 	def __str__(self):
 		return "joltages: "+ ",".join([str(x) for x in self.joltages]) + "\ngoal: " + ",".join([str(x) for x in self.joltage_goal]) + "\n" + "\n".join([str(b) for b in self.buttons]) + "\n"
@@ -114,6 +127,21 @@ class Machine:
 					if self.joltage_goal_impossible(state):
 						continue
 					new_permutations.append(state)
+				"""
+				current_joltage_index = self.get_first_joltage_index_too_low(permutation)
+				buttons_for_joltage_index = self.buttons_by_joltage_index[current_joltage_index]
+				for button in buttons_for_joltage_index:
+					state = permutation.copy()
+					state.push_buttons(button.index, button)
+					if state.joltage_state == self.joltage_goal:
+						self.button_clicks = state.button_clicks
+						return
+					if self.joltage_too_high(state):
+						continue
+					if self.joltage_goal_impossible(state):
+						continue
+					new_permutations.append(state)
+				"""
 			permutations = new_permutations
 		#print(permutations)
 
@@ -129,7 +157,6 @@ class Machine:
 			if joltage_state.joltage_state[i] < self.joltage_goal[i]:
 				return i
 		print("ERROR! A")
-		
 
 	def joltage_goal_impossible(self, joltage_state):
 		# given the rule that it only works towards the right on buttons
