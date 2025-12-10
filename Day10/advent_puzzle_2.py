@@ -32,6 +32,8 @@
   # and really, there will still be lots of repeated AAB/ABA/BAA permutations here
     # commented this change out
 
+# add in: order buttons largest to smallest, so the big-effect buttons get pruned out of the permutation tree as soon as possible
+
 
 import sys
 
@@ -84,6 +86,7 @@ class Machine:
 			if config_term[0] == '(':
 				button_index = len(self.buttons)
 				self.buttons.append(Button(config_term, button_index))
+		self.buttons.sort(key=lambda b: len(b.joltage_indexes), reverse=True)
 		self.button_clicks = []
 
 		self.buttons_by_joltage_index = [] # list of lists, ith is the list of buttons that can affect joltage_index "i"
