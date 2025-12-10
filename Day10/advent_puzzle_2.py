@@ -34,6 +34,15 @@
 
 # add in: order buttons largest to smallest, so the big-effect buttons get pruned out of the permutation tree as soon as possible
 
+# that is still taking a while - machine 3 is up to 8million active permutations...18mill...51mill and 42GBmem...79mill
+  # is this actually a depth-first search that looks like a breadth-first search? but if that's the case then i should be able to prune the tree faster
+  # how else can i prune?
+  # ok, i'm just stopping that run
+# let's confirm the button ordering is working as intended
+  # yes, confirmed on sample input and print statements
+
+# ...pausing work to return to prev day...
+
 
 import sys
 
@@ -112,7 +121,7 @@ class Machine:
 	def __repr__(self):
 		return self.__str__()
 
-	def calc_button_clicks(self):
+	def calc_button_clicks(self, machine_index):
 		self.button_clicks = [] # index of buttons to click
 		# so, i want a breadth-first search of all possible permutations
 		permutations = [] # list of LightsStates
@@ -124,8 +133,10 @@ class Machine:
 				return
 			permutations.append(state)
 		while True:
+			print("working on machine "+str(machine_index)+" - "+str(len(permutations))+" permutations active")
 			new_permutations = []
 			for permutation in permutations:
+				#print("".join([str(x) for x in permutation.button_clicks]))
 				for i in range(len(self.buttons)):
 					if i < permutation.button_clicks[-1]:
 						continue # force button click ordering
@@ -139,21 +150,6 @@ class Machine:
 					if self.joltage_goal_impossible(state):
 						continue
 					new_permutations.append(state)
-				"""
-				current_joltage_index = self.get_first_joltage_index_too_low(permutation)
-				buttons_for_joltage_index = self.buttons_by_joltage_index[current_joltage_index]
-				for button in buttons_for_joltage_index:
-					state = permutation.copy()
-					state.push_buttons(button.index, button)
-					if state.joltage_state == self.joltage_goal:
-						self.button_clicks = state.button_clicks
-						return
-					if self.joltage_too_high(state):
-						continue
-					if self.joltage_goal_impossible(state):
-						continue
-					new_permutations.append(state)
-				"""
 			permutations = new_permutations
 		#print(permutations)
 
@@ -210,7 +206,7 @@ answer = 0
 i = 0
 for machine in machines:
 	print("working on machine " + str(i))
-	machine.calc_button_clicks()
+	machine.calc_button_clicks(i)
 	answer = answer + len(machine.button_clicks)
 	i = i + 1
 print("====")
