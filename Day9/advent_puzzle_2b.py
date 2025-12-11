@@ -40,6 +40,16 @@
   # those changes also caused testing errors, so remove them
 
 
+# what if i just check the inner-rect (one unit inside the actual rect) against all shape_egdes?
+# any overlap means invalid
+# because the only way to reach there is for the rect to cross into out of bounds
+  # now getting answer 1516897893 from pair ((5741,67351), (94619,50285))
+  # it's higher than last time, so trying it
+  # YEEEEEEEEEEEEEEES!!!!!!!!!
+  # on leaderboard at 770 before that answer - how much does a very later answer count for?...went to 806 - so a +36 for late completion
+
+
+
 import sys
 from classes_puzzle_2b import *
 

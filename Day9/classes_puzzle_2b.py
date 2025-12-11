@@ -146,21 +146,37 @@ class Shape:
 		return False
 
 	def is_valid_rect(self, corner_a, corner_b):
+		min_x = min(corner_a.x, corner_b.x)
+		max_x = max(corner_a.x, corner_b.x)
+		min_y = min(corner_a.y, corner_b.y)
+		max_y = max(corner_a.y, corner_b.y)
+		inner_corner_a = Coordinate(min_x+1, min_y+1)
+		inner_corner_b = Coordinate(max_x-1, max_y-1)
+		#print("regular corners = "+str(corner_a)+" and "+str(corner_b))
+		#print("inner corners = "+str(inner_corner_a)+" and "+str(inner_corner_b))
+
 		self.count_is_valid_rect = self.count_is_valid_rect + 1
-		print(self.count_is_valid_rect)
-		print("from "+str(corner_a)+" to "+str(corner_b))
-		if not self.is_valid_rect_edge(Line(corner_a, Coordinate(corner_a.x, corner_b.y))):
+		#print(self.count_is_valid_rect)
+		#print("from "+str(corner_a)+" to "+str(corner_b))
+		if not self.is_valid_rect_edge(Line(inner_corner_a, Coordinate(inner_corner_a.x, inner_corner_b.y))):
 			return False
-		if not self.is_valid_rect_edge(Line(corner_a, Coordinate(corner_b.x, corner_a.y))):
+		if not self.is_valid_rect_edge(Line(inner_corner_a, Coordinate(inner_corner_b.x, inner_corner_a.y))):
 			return False
-		if not self.is_valid_rect_edge(Line(corner_b, Coordinate(corner_a.x, corner_b.y))):
+		if not self.is_valid_rect_edge(Line(inner_corner_b, Coordinate(inner_corner_a.x, inner_corner_b.y))):
 			return False
-		if not self.is_valid_rect_edge(Line(corner_b, Coordinate(corner_b.x, corner_a.y))):
+		if not self.is_valid_rect_edge(Line(inner_corner_b, Coordinate(inner_corner_b.x, inner_corner_a.y))):
 			return False
 		
 		return True
+		
 
 	def is_valid_rect_edge(self, rect_edge):
+		for shape_edge in self.lines:
+			if shape_edge.overlaps_line(rect_edge):
+				return False
+		return True
+
+		"""
 		# if any shape edge subsumes the rect edge, then it is valid
 		for shape_edge in self.lines:
 			if shape_edge.subsumes_line(rect_edge):
@@ -183,6 +199,7 @@ class Shape:
 				print(rect_edge)
 				return False
 		return True
+		"""
 	
 	def is_inside_ray_cast(self, coord):
 		# coordinates on the shape edge are ok
