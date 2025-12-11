@@ -56,11 +56,16 @@ class Node:
 	def count_paths(self, target_name, needed_markers):
 		#print("check "+self.name)
 
+		if self.path_count != None:
+			return self.path_count
+
 		for needed_marker in needed_markers:
 			if not needed_marker in self.markers:
+				self.set_path_count(0)
 				return 0
 
 		if self.name == target_name:
+			self.set_path_count(1)
 			return 1
 
 		next_markers = needed_markers.copy()
@@ -70,7 +75,12 @@ class Node:
 		result = 0
 		for n in self.children:
 			result = result + n.count_paths(target_name, next_markers)
+		self.set_path_count(result)
 		return result
+
+	def set_path_count(self, count):
+		self.path_count = count
+		print("set path count: "+self.name+": "+str(count))
 
 
 
