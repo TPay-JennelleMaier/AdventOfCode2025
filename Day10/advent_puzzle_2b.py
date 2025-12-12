@@ -101,6 +101,7 @@ class Machine:
 
 	def calc_button_clicks(self, machine_index):
 		button_sets_todo = self.button_sets.copy()
+		button_sets_todo.sort(key=lambda button_set: len(button_set.button_indexes)) #shortest to longest
 		permutations = [ Permutation([None]*len(self.buttons)) ] # init with one empty permutation
 		while len(button_sets_todo) > 0:
 			# not sorting the button sets by anything yet, let's see if it matters
