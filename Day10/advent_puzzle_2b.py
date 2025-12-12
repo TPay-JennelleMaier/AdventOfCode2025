@@ -16,6 +16,24 @@
 # find the fewest total button presses to configure all the joltages
 
 # taking a whole new approach in this new file
+  # deal with sets of buttons that can affect each joltage index, which must sum to the joltage goal
+  # so now it is a series of equations that must all be true - and taking the lowest overall answer
+
+# fast for sample input
+# actual input - got to 11th fast - 11th is taking a while, spiking memory high, yeah the two shortest button sets don't overlap
+
+# added more logic to selecting the next button_set to apply
+  # works well on sample input
+  # actual - taking a while on 4th, jumped from a 2-set to a +6 set
+# maybe I should start with a 4-set on purpose? to balance the initial start with the next steps?
+  # actual - got to 10th fast! - working on 11th, memory is not spiking - now on machine 26! memory usage still low - still on 26th, memory usage increased a chunk but is still in the green - oh no, still on 26th and memory usage is still rising, in the yellow now...
+# maybe change the selection criteria slightly - instead of "max overlapping" go for "minimum not overlapping"
+  # going to stop the current run and try again with this
+  # still fast on sample
+  # actual - reached 10th fast - reached 26th fast! - working on 32th - now on 42th - i think i might have it solved - now on 61th, this one is taking longer but memory usage still green so far...
+    # if current effort fails, i can try sorting by lowest joltage_goal among the button_sets, that's another way to keep permutations low
+  # still on 61th, memory usage rising but still green - still on 61th and memory is in the yellow, halting it again...
+
 
 
 
@@ -101,14 +119,23 @@ class Machine:
 
 	def calc_button_clicks(self, machine_index):
 		button_sets_todo = self.button_sets.copy()
-		button_sets_todo.sort(key=lambda button_set: len(button_set.button_indexes)) #shortest to longest
+		#button_sets_todo.sort(key=lambda button_set: len(button_set.button_indexes)) #shortest to longest
+		button_sets_todo.sort(key=lambda button_set: abs(4 - len(button_set.button_indexes))) #length is closest to 4
 		permutations = [ Permutation([None]*len(self.buttons)) ] # init with one empty permutation
 		while len(button_sets_todo) > 0:
-			# not sorting the button sets by anything yet, let's see if it matters
+			# start with the shortest button set, to make the fewest permutations (default sort)
+			# then continue with the button set that overlaps the most with already-set indexes
+			if len(permutations) > 1:
+				already_set_button_indexes = [i for i in range(len(self.buttons)) if permutations[0].current_state[i] != None]
+				# sort by max overlapping with previous
+				#button_sets_todo.sort(key=lambda button_set: len([i for i in button_set.button_indexes if i in already_set_button_indexes]), reverse=True) #max overlapping
+				# sort by min not-overlapping with previous
+				button_sets_todo.sort(key=lambda button_set: len([i for i in button_set.button_indexes if i not in already_set_button_indexes]))
+			
 			next_button_set = button_sets_todo[0]
 			button_sets_todo.remove(next_button_set)
 			
-			#print("next button set:"+str(next_button_set))
+			print("button set:"+str(next_button_set))
 
 			next_permutations = []
 			for p in permutations:
@@ -195,7 +222,7 @@ f = open(input_filename, "r")
 full_input = f.read()
 f.close()
 
-print(full_input)
+#print(full_input)
 
 machines = []
 for line in full_input.split('\n'):
@@ -205,7 +232,9 @@ for line in full_input.split('\n'):
 answer = 0
 i = 0
 for machine in machines:
+	print("==================")
 	print("working on machine " + str(i))
+	print(machine)
 	machine.calc_button_clicks(i)
 	answer = answer + machine.min_button_clicks
 	i = i + 1
