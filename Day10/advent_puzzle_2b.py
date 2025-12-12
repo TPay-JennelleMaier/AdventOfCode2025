@@ -90,7 +90,7 @@ class Machine:
 		self.shortest_permutation = None
 		self.min_button_clicks = None
 
-		self.cache_x_ints_sum_to_y = [] # list[x][y] = list of tuples
+		self.cache_x_ints_sum_to_y = {} # dict key=(x,y) value=list of tuples
 
 	
 	def __str__(self):
@@ -107,18 +107,20 @@ class Machine:
 			next_button_set = button_sets_todo[0]
 			button_sets_todo.remove(next_button_set)
 			
-			print(next_button_set)
+			print("next button set:"+str(next_button_set))
 
 			next_permutations = []
 			for p in permutations:
 				next_permutations.extend( self.apply_button_set_to_permutation(p, next_button_set) )
 			permutations = next_permutations
-			print("permutation count: "+str(len(permutations)))
+			print("machine: "+str(machine_index)+" permutation count: "+str(len(permutations)))
 
-		self.shortest_permutation = permutations.sort(key=lambda p: sum(p.current_state))[0]
+		permutations.sort(key=lambda p: sum(p.current_state))
+		self.shortest_permutation = permutations[0]
+		print("shortest permutation: "+str(self.shortest_permutation))
 		self.min_button_clicks = sum(self.shortest_permutation.current_state)
 
-		print("machine "+str(machine_index)+" - "+str(self.min_button_clicks)+" button clicks")
+		print("machine "+str(machine_index)+" needed "+str(self.min_button_clicks)+" button clicks")
 
 	# returns a list of new permutations
 	def apply_button_set_to_permutation(self, permutation, button_set):
@@ -130,8 +132,8 @@ class Machine:
 			if permutation.current_state[i] != None and i in remaining_button_indexes:
 				remaining_joltage_goal = remaining_joltage_goal - permutation.current_state[i]
 				remaining_button_indexes.remove(i)
-		print("remaining joltage goal: "+str(remaining_joltage_goal))
-		print(remaining_button_indexes)
+		#print("remaining joltage goal: "+str(remaining_joltage_goal))
+		#print(remaining_button_indexes)
 		if remaining_joltage_goal < 0: # dead end, over joltage goal, invalid permutation
 			return []
 		if remaining_joltage_goal == 0:
@@ -144,50 +146,41 @@ class Machine:
 		# build new permutations based on possible uses of the remaining_button_indexes
 		# needs to sum to remaining_joltage_goal - how many ways for x ints to sum to y?
 		x_ints_sum_to_y = self.how_x_ints_sum_to_y(len(remaining_button_indexes), remaining_joltage_goal)
-		print("x_y results")
-		print("x = "+str(len(remaining_button_indexes)))
-		print("y = "+str(remaining_joltage_goal))
-		print(x_ints_sum_to_y)
 		new_permutations = []
 		for x_y_result in x_ints_sum_to_y:
 			new_permutation = Permutation(permutation.current_state)
 			for i in range(len(x_y_result)):
 				new_permutation.current_state[remaining_button_indexes[i]] = x_y_result[i]
 			new_permutations.append(new_permutation)
-		print("new permutations")
-		print(new_permutations)
+		#print("new permutations")
+		#print(new_permutations)
 		return new_permutations
 
 	# returns a list of tuples - each tuple is one way for x ints to sum to y
 	def how_x_ints_sum_to_y(self, x, y):
 		# check cache
-		if x < len(self.cache_x_ints_sum_to_y):
-			if y < len(self.cache_x_ints_sum_to_y[x]):
-				print("used cache for x="+str(x)+", y="+str(y))
-				print(self.cache_x_ints_sum_to_y[x][y])
-				return self.cache_x_ints_sum_to_y[x][y]
+		if (x,y) in self.cache_x_ints_sum_to_y:
+			#print("used cache for x="+str(x)+", y="+str(y))
+			#print(self.cache_x_ints_sum_to_y[(x,y)])
+			return self.cache_x_ints_sum_to_y[(x,y)]
 
 		# find permutations
 		results = []
 		if x == 1:
 			results.append( (y,) )
 		else:
-			for i in range(y):
+			for i in range(y+1):
 				sub_results = self.how_x_ints_sum_to_y(x-1, y-i)
-				print("sub_results")
-				print(sub_results)
+				#print("sub_results")
+				#print(sub_results)
 				for sub_result in sub_results:
 					results.append( (i,)+sub_result )
 		
 
 		# update cache
-		print("set cache for x="+str(x)+", y="+str(y))
-		print(results)
-		while len(self.cache_x_ints_sum_to_y) <= x:
-			self.cache_x_ints_sum_to_y.append([])
-		while len(self.cache_x_ints_sum_to_y[x]) <= y:
-			self.cache_x_ints_sum_to_y[x].append([])
-		self.cache_x_ints_sum_to_y[x][y] = results
+		#print("set cache for x="+str(x)+", y="+str(y))
+		#print(results)
+		self.cache_x_ints_sum_to_y[(x,y)] = results
 
 		return results
 
@@ -212,7 +205,7 @@ i = 0
 for machine in machines:
 	print("working on machine " + str(i))
 	machine.calc_button_clicks(i)
-	answer = answer + len(machine.min_button_clicks)
+	answer = answer + machine.min_button_clicks
 	i = i + 1
 print("====")
 print(answer)
