@@ -107,13 +107,14 @@ class Machine:
 			next_button_set = button_sets_todo[0]
 			button_sets_todo.remove(next_button_set)
 			
-			print("next button set:"+str(next_button_set))
+			#print("next button set:"+str(next_button_set))
 
 			next_permutations = []
 			for p in permutations:
 				next_permutations.extend( self.apply_button_set_to_permutation(p, next_button_set) )
 			permutations = next_permutations
 			print("machine: "+str(machine_index)+" permutation count: "+str(len(permutations)))
+			#print(permutations)
 
 		permutations.sort(key=lambda p: sum(p.current_state))
 		self.shortest_permutation = permutations[0]
@@ -139,7 +140,7 @@ class Machine:
 		if remaining_joltage_goal == 0:
 			for i in remaining_button_indexes: # finished with this button set
 				permutation.current_state[i] = 0
-				return [ permutation ]
+			return [ permutation ]
 		if len(remaining_button_indexes) == 0:  # dead end, can't reach joltage goal, invalid permutation
 			return []
 
